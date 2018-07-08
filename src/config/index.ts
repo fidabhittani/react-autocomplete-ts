@@ -1,4 +1,4 @@
-import { accessToken } from "../utils/credentials";
+import { accessToken } from "../oauth-tokens";
 
 export const apiUrl = "https://api.github.com/";
 

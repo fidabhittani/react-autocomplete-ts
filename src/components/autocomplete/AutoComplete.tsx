@@ -136,6 +136,9 @@ export default class AutoComplete extends React.Component<
       if (currentlyfocused > filteredOptions.length) {
         currentlyfocused = 1;
       }
+      if (this.autocompleteItem.current) {
+        this.autocompleteItem.current.focus();
+      }
 
       this.setState({
         currentlyfocused
@@ -258,6 +261,14 @@ export default class AutoComplete extends React.Component<
     this.searchInputField.current.focus();
   };
 
+  /**
+   * On Blur
+   */
+  public onInputBlur = () => {
+    this.setState({
+      filteredOptions: []
+    });
+  };
   public render() {
     const {
       filteredOptions: options,
@@ -280,6 +291,7 @@ export default class AutoComplete extends React.Component<
           onKeyDown={this.handleKeyDown}
           onClick={this.handleChange}
           autoFocus={true}
+          onBlur={this.onInputBlur}
           value={searchValue}
           style={{
             width: "100%"
@@ -290,7 +302,12 @@ export default class AutoComplete extends React.Component<
           className={itemClass || "search-complete-quandoo-items"}
           ref={this.autoCompleteContainer}
           style={{
+            background: "#ffffff",
             left: 0,
+            maxHeight: "400px",
+
+            overflowX: "hidden",
+            overflowY: "auto",
             position: "absolute",
             right: 0,
             top: "100%",

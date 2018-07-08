@@ -3,6 +3,11 @@ import AutoComplete from "./components/autocomplete";
 import { ISingleOption } from "./components/autocomplete/typings";
 import { apiUrl, headers } from "./config";
 import { countries } from "./utils/countries";
+
+import MainLayout from "./components/Layout";
+
+import { Container, Header } from "semantic-ui-react";
+
 interface IAppState {
   options: string[];
   selectedItem: ISingleOption;
@@ -27,31 +32,56 @@ class App extends React.Component<any, IAppState> {
   public render() {
     const { options, selectedItem } = this.state;
     return (
-      <div className="App">
-        <AutoComplete
-          selectedItem={selectedItem}
-          onSelect={this.onSelectItem}
-          itemClass={"quandoo-demo-autocomplete-items"}
-          inputClass={"quandoo-demo-autocomplete-input"}
-          fields={{
-            image: "avatar_url",
-            key: "id",
-            text: "login",
-            value: "login"
-          }}
-          resource={{
-            headers,
-            url: `${apiUrl}search`
-          }}
-        />
-        <AutoComplete
-          options={options}
-          selectedItem={selectedItem}
-          onSelect={this.onSelectItem}
-          itemClass={"quandoo-demo-autocomplete-items"}
-          inputClass={"quandoo-demo-autocomplete-input"}
-        />
-      </div>
+      <React.Fragment>
+        <MainLayout>
+          <Container>
+            <Header as="h2">TypeScript React Autocomplete</Header>
+            <form className="ui form">
+              <h4 className="ui dividing header">Usage</h4>
+
+              <div className="field">
+                <div className="two fields">
+                  <div className="field">
+                    <label>Local Options Usage</label>
+                    <AutoComplete
+                      options={options}
+                      constainerClass={"ui input"}
+                      selectedItem={selectedItem}
+                      onSelect={this.onSelectItem}
+                    />
+                  </div>
+                  <div className="field">
+                    <label>Remote Usage</label>
+                    <AutoComplete
+                      selectedItem={selectedItem}
+                      onSelect={this.onSelectItem}
+                      constainerClass={"ui input"}
+                      fields={{
+                        image: "avatar_url",
+                        key: "id",
+                        text: "login",
+                        value: "login"
+                      }}
+                      resource={{
+                        headers,
+                        url: `${apiUrl}search`
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="field">
+                <label>Default Usage</label>
+                <AutoComplete
+                  options={options}
+                  selectedItem={selectedItem}
+                  onSelect={this.onSelectItem}
+                />
+              </div>
+            </form>
+          </Container>
+        </MainLayout>
+      </React.Fragment>
     );
   }
 }
