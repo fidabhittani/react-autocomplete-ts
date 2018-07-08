@@ -1,6 +1,6 @@
 # Typescript React Demo
 
-Typescript Autocomplete
+React Typescript Autocomplete
 
 ## Installation
 
