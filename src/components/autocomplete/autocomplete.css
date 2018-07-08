@@ -1,0 +1,13 @@
+.search-complete-quandoo {
+  /* * Relative containers for a floating autocomplete */
+  position: relative;
+  display: inline-block;
+}
+.search-complete-quandoo-items > div:hover {
+  background-color: #e9e9e9;
+}
+.search-complete-active {
+  /* Arrow keys navigation :*/
+  background-color: DodgerBlue !important;
+  color: #ffffff;
+}
