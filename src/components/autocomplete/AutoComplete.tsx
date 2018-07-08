@@ -136,12 +136,9 @@ export default class AutoComplete extends React.Component<
       if (currentlyfocused > filteredOptions.length) {
         currentlyfocused = 1;
       }
-      if (this.autocompleteItem.current) {
-        this.autocompleteItem.current.focus();
-      }
 
-      this.setState({
-        currentlyfocused
+      this.setState({ currentlyfocused }, () => {
+        console.info("index updated to :", currentlyfocused);
       });
     }
   };
