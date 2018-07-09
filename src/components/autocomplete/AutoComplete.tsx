@@ -6,7 +6,8 @@ import "./autocomplete.css";
 import { IAutoCompleteProps, ISingleOption } from "./typings";
 
 /**
- * Sorting the option collection
+ * Sorting the option collection. Sorting internally will make the component less dependent on outside of components
+ * and imports statements.
  */
 export const sortOptions = (a: ISingleOption, b: ISingleOption) => {
   if (a.text < b.text) {
@@ -51,8 +52,14 @@ export default class AutoComplete extends React.Component<
       false
     );
   }
+  public componentDidMount() {
+    console.log("mounte complete");
+  }
+
   /**
-   *  Custom debounce function
+   * Custom debounce function to ignore immediate hits on change to the server. debounce will respond to events
+   * generated in a certain interval, very necessary for events like these, when we need to fire up api requests on
+   * change. It ensures better UX.
    * @param func
    * @param wait
    * @param immediate
@@ -78,30 +85,40 @@ export default class AutoComplete extends React.Component<
     };
   }
   /**
-   * Prepare collection for the UI
+   * As options either from an API or local options needed to be mapped to formed an object array, and if already an object array
+   * then add three more keys {key, value, text}. which the component use internally to indetify different items and display the
+   * value being specified on the UI.
+   * These 3 fields are custom and can be provided through field props.
    */
   public prepareAutocompleteOptions = (options: any) => {
     const { fields }: any = this.props;
-    return options.map((option: any, index: number) => {
-      const isObject = typeof option === "object";
-      const newOption = {
-        image: isObject ? option[fields.image || ""] : "",
-        key: isObject ? option[fields.key] : `${option}-${index}`,
-        text: isObject ? option[fields.text] : option,
-        value: isObject ? option[fields.value] : option
-      };
-      if (isObject) {
-        return {
-          ...option,
-          ...newOption
-        };
-      }
-      return newOption;
-    });
+    return (
+      (options &&
+        options.map((option: any, index: number) => {
+          const isObject = typeof option === "object";
+          const newOption = {
+            image: isObject ? option[fields.image || ""] : "",
+            key: isObject ? option[fields.key] : `${option}-${index}`,
+            text: isObject ? option[fields.text] : option,
+            value: isObject ? option[fields.value] : option
+          };
+          if (isObject) {
+            return {
+              ...option,
+              ...newOption
+            };
+          }
+          return newOption;
+        })) ||
+      []
+    );
   };
 
   /**
-   * Handle Key Down events
+   * Handle Key Down events:
+   * Key down events for : Arrow UP (38) Arrow Down (13) Enter(27) Esc (27).
+   * Here this will control the navigation and if some item is pressed with enter, it will get selected
+   * and be set on the on the implementers function.
    */
 
   public handleKeyDown = (event: any) => {
@@ -143,10 +160,13 @@ export default class AutoComplete extends React.Component<
     }
   };
   /**
-   * Process Change
+   * Process Change is an implementation which will fire up when a resource is not defined, it will look for the local options
+   * array being provide, starts searching and filtering the local options arrays. there is no api request involved.
    */
   public processChange = (value: string) => {
     const { options } = this.state;
+    let { currentlyfocused } = this.state;
+
     const filteredOptions = options
       .filter((option: any) => {
         return option.text
@@ -154,10 +174,15 @@ export default class AutoComplete extends React.Component<
           .startsWith(value.toLocaleLowerCase());
       })
       .sort(sortOptions);
-    this.setState({ searchValue: value, filteredOptions });
+    if (filteredOptions.length > 0) {
+      currentlyfocused = 1;
+    }
+    this.setState({ searchValue: value, filteredOptions, currentlyfocused });
   };
   /**
-   * Handle Resource erros
+   * This is just a simple catch handle implementation, Generally an elegant way of handling erros from api will be to
+   * use a global handler for all resource/api requests. which can setup erros someehere in redux or something
+   * and a Message compoenent is then used to display those messages.
    */
   public handleResourceErrors = (error: any) => {
     // TODO: pass in global handlers for errors
@@ -171,7 +196,9 @@ export default class AutoComplete extends React.Component<
     console.log(error.config);
   };
   /**
-   * Getting resourse data
+   * Here we are actually making an async request to the resource specified to fullfill the need of the
+   * ProcessRemoteChange. Async/Await is being used here instead of a promise callback to make it look
+   * more synchronous and enclosed it inside of try catch.
    */
   public getResourceData = async (search: string) => {
     try {
@@ -185,43 +212,40 @@ export default class AutoComplete extends React.Component<
       } = response;
       return items;
     } catch (error) {
+      this.handleResourceErrors(error);
       this.setState({ filteredOptions: [], searchValue: "" });
     }
   };
 
   /**
-   * Process Remote onChange
+   * HandleChange will pass on control to this function in case of when we have a resource props defined
+   * this will initiate an ajax call to the resource mentioned with options in the resource. we have placed axios
+   * as a dependency on this component, to make it able to do ajax calls to the resources.
+   * This will fire up a loader, for now its just text, but a loader can be defined for it from the UI tool kit which
+   * implements it.
+   * The function will map the values and add certain keys to it {key, text, value} which will be specified in the field props.
+   * This will enable the autocomplete to show the text specified on the fields props and identify the resource by the defined key field.
    */
 
   public processRemoteChange = async () => {
     const { searchValue } = this.state;
-    const { fields }: any = this.props;
-    let filteredOptions = [];
-    filteredOptions.push({
-      disabled: true,
-      key: 0,
-      text: "Loading...",
-      value: "Loading..."
-    });
+    let { currentlyfocused } = this.state;
 
+    let filteredOptions = [];
+    filteredOptions.push({ disabled: true });
     this.setState({ searchValue, filteredOptions });
     const items: any = await this.getResourceData(searchValue);
-    filteredOptions =
-      items &&
-      items.map((item: any) => {
-        return {
-          ...item,
-          image: item[fields.image || ""],
-          key: item[fields.key],
-          text: item[fields.text],
-          value: item[fields.value]
-        };
-      });
-    this.setState({ filteredOptions });
+    filteredOptions = this.prepareAutocompleteOptions(items);
+    if (filteredOptions.length > 0) {
+      currentlyfocused = 1;
+    }
+    this.setState({ filteredOptions, currentlyfocused });
   };
 
   /**
-   * Handle any changes on the Input field
+   * Handle any changes on the Input field, When some input is detected we will see if we have a remote resource
+   * in case there is no remote resource on the props we will initiate the local options process on the dropdown
+   * autocomplete
    */
 
   public handleChange = (e: any) => {
@@ -247,7 +271,9 @@ export default class AutoComplete extends React.Component<
     this.processChange(searchValue);
   };
   /**
-   * Get values when clicked
+   * When a certain item in the list is click we will select its value and pass it on to the component which is
+   * implementing it, the component which implements the autocomplete will provide an api/function which will then
+   * get the selected value to the implementer.
    */
   public getValue = (searchValue: any) => {
     const { onSelect } = this.props;
@@ -259,13 +285,19 @@ export default class AutoComplete extends React.Component<
   };
 
   /**
-   * On Blur
+   * When clicked away from the input we will get rid of the autocomplete and disable the list of items
+   * we can do a cache on the results from API but that is not implemented to keep it simple for now
    */
   public onInputBlur = () => {
     this.setState({
       filteredOptions: []
     });
   };
+
+  /**
+   * Render can be split down to further more components, but this component will be less touched, and the implementer
+   * component will provide the props to make it function
+   */
   public render() {
     const {
       filteredOptions: options,

@@ -1,6 +1,9 @@
-# Typescript React Demo
+# Typescript Autocomplete
 
-React Typescript Autocomplete
+Follwing technologies were used to develop the autocomplete
+
+- React 16+
+- Typescript 2.8+
 
 ## Installation
 
@@ -9,24 +12,57 @@ npm install
 npm start
 ```
 
-### Built With
-
-- React 16.3.2
-- Typescript 2.8
-
 ### Requirements
 
-- Nodejs
-- npm
+- Nodejs > 8
+- npm > 5
 
-## Demo Link
+# Usage
 
-[https://none-yet/]
+- Default Usage.
 
-## Tests
-
+```sh
+<AutoComplete
+  options={options}
+  selectedItem={selectedItem}
+  onSelect={this.onSelectItem}
+/>
 ```
-npm run test
+
+- Local options usage / Css classes
+
+```sh
+<AutoComplete
+  options={options}
+  constainerClass={"container-auto"}
+  itemClass={"auto-item"}
+  activeClass={"active"}
+  selectedItem={selectedItem}
+  onSelect={this.onSelectItem}
+/>
+```
+
+- Remote Options/API usage
+
+```sh
+<AutoComplete
+  options={options}
+  constainerClass={"container-auto"}
+  itemClass={"auto-item"}
+  activeClass={"active"}
+  selectedItem={selectedItem}
+  onSelect={this.onSelectItem}
+  fields={{
+        image: "avatar_url",
+        key: "id",
+        text: "login",
+        value: "login"
+    }}
+   resource={{
+        headers,
+        url: `${apiUrl}search`
+    }}
+    />
 ```
 
 ## License
